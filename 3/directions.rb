@@ -8,8 +8,8 @@ class Position
     @y = y
   end
 
-  def ==(position)
-    @x == position.x && @y == position.y
+  def ==(other)
+    @x == other.x && @y == other.y
   end
 
   def to_s
@@ -30,38 +30,47 @@ class Position
   end
 end
 
-class VisitedHouseList
-  def initialize(directions)
-    @directions = directions
+class PositionsList
+  attr_accessor :all
+
+  def initialize
+    @all = []
   end
 
-  def generate
-    visited_positions = [Position.new(0, 0)]
-
+  def generate_from_directions(directions)
     current_pos = Position.new(0, 0)
-
-    @directions.each do |d|
+    @all.push(Position.new(0, 0))
+    directions.each do |d|
       current_pos.move(d)
-      already_present = false
-      visited_positions.each do |vp|
-        if vp == current_pos
-          already_present = true
-        end
-      end
-
-      unless already_present
-        visited_positions.push(Position.new(current_pos.x, current_pos.y))
-      end
+      add_if_unique(current_pos)
     end
-
-    visited_positions
+    @all
   end
+
+  def add_positions(positions)
+    positions.each { |p| add_if_unique(p) }
+  end
+
+  private
+
+  def position_visited?(position)
+    already_visited = false
+    @all.each do |vp|
+      already_visited = true if vp == position
+    end
+    already_visited
+  end
+
+  def add_if_unique(p)
+    @all.push(Position.new(p.x, p.y)) unless position_visited?(p)
+  end
+
 end
 
 directions = File.read("input.txt")
 directions = directions.split("")
 
-visited_positions = VisitedHouseList.new(directions).generate
+visited_positions = PositionsList.new.generate_from_directions(directions)
 
 puts "Num visited positions: #{visited_positions.count}"
 
@@ -76,5 +85,9 @@ directions.each_with_index do |d, i|
   end
 end
 
-santa_positions = VisitedHouseList.new(santa_directions).generate
-robot_positions = VisitedHouseList.new(robot_directions).generate
+all_positions = PositionsList.new
+all_positions.generate_from_directions(santa_directions)
+robot_positions = PositionsList.new.generate_from_directions(robot_directions)
+all_positions.add_positions(robot_positions)
+
+puts "Santa and Robot positions: #{all_positions.all.count}"
