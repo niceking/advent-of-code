@@ -12,4 +12,4 @@ num = 0
   break if /^0{6}/.match(output)
 end
 
-puts "#{num}"
+puts "#{num}!"
